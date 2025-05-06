@@ -6,7 +6,14 @@ import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import "highlight.js/styles/github-dark.css";
+import type { ReactNode } from "react";
+// import type { ComponentProps } from "react-markdown/lib/ast-to-react";
 
+type CodeProps = ComponentProps["code"] & {
+  inline?: boolean;
+  className?: string;
+  children?: ReactNode;
+};
 export default function MarkdownContent({ source }: { source: string }) {
   return (
     <div className="prose dark:prose-invert">
@@ -26,7 +33,7 @@ export default function MarkdownContent({ source }: { source: string }) {
           ol: ({ node, ...props }) => <ol className="list-decimal ml-6 mb-4" {...props} />,
           li: ({ node, ...props }) => <li className="mb-1" {...props} />,
           blockquote: ({ node, ...props }) => <blockquote className="border-l-4 pl-4 italic text-muted-foreground" {...props} />,
-          code: ({ node, inline, className, children, ...props }) => {
+          code: ({ inline, className, children, ...props }: CodeProps) => {
             return inline ? (
               <code className="bg-muted px-1 py-0.5 rounded text-sm !font-mono" {...props}>
                 {children}
