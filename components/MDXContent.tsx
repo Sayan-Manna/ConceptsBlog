@@ -9,10 +9,11 @@ import "highlight.js/styles/github-dark.css";
 import type { ReactNode } from "react";
 // import type { ComponentProps } from "react-markdown/lib/ast-to-react";
 
-type CodeProps = ComponentProps["code"] & {
+type CodeProps = {
   inline?: boolean;
   className?: string;
   children?: ReactNode;
+  // [key: string]: any; // for any other props passed down
 };
 export default function MarkdownContent({ source }: { source: string }) {
   return (
