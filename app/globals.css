@@ -4,6 +4,26 @@
   --background: #ffffff;
   --foreground: #171717;
 }
+/* Scrollbar */
+/* For Webkit-based browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px; /* Adjust the width */
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Makes the track transparent */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6b6b6b; /* Adjust the thumb color */
+  border-radius: 10px; /* Round the edges */
+}
+
+/* Optional: Hide scrollbar when not scrolling */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
 
 @theme inline {
   --color-background: var(--background);
