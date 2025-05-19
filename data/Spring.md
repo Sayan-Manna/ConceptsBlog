@@ -8,7 +8,7 @@ publishedAt: 2025-05-18
 # IoC and DI
 
 - IoC is a design principle where the **control of object creation and lifecycle** is **inverted** from your code to a **container** like Spring.
-- Inversion of Control means **handing over control of object creation and management to a container** (like Spring) instead of manually creating them.
+- Inversion of Control means **handing over control of object creation and management to a 1container** (like Spring) instead of manually creating them.
 ```java
 // normal java
 Car car = new Car(); // You create the object
@@ -164,6 +164,7 @@ You don't need to write ctx.getBean(...) unless you want manual control or are w
 - **Thread-safety**: Immutable objects are automatically safe for use in multi-threaded environments.
 
 ---
+---
 # Beans
 
 - A **Spring Bean** is simply a Java object managed by the Spring container.
@@ -180,7 +181,7 @@ Engine engine = context.getBean(Engine.class); // Spring manages it
 ```
 - Created via @Component, @Service, @Repository, @Controller, or @Bean methods
 - Registered inside the **ApplicationContext**
-
+---
 ### Spring Container: BeanFactory vs ApplicationContext
 
 | **Container**      | **Description**                                             |
@@ -189,6 +190,7 @@ Engine engine = context.getBean(Engine.class); // Spring manages it
 | ApplicationContext | Full-featured – supports AOP, internationalization, events. |
 - In Spring Boot, we **always use ApplicationContext** under the hood.
 - ApplicationContext is the core interface that **manages beans and their lifecycle**.
+---
 ### Declaring Beans:
 
 1. `@Component` and Stereotypes like @Service, ....
@@ -221,7 +223,7 @@ public class Engine { }
 // or globally
 // spring.main.lazy-initialization=true
 ```
-
+---
 ### Component Scanning:
 
 - Spring scans for components in the **same package or sub-packages** as the main class:
@@ -261,7 +263,7 @@ public @interface Service {
 
 - **Q. Will Spring scan a class if I don't annotate it?**
 	- No. You must annotate it or register it manually with @Bean.
-
+---
 ### Bean Scopes
 
 - **Bean Scope** defines the **lifecycle and visibility** of a bean — basically, **how many instances** of a bean Spring should create and **when**.
@@ -310,7 +312,7 @@ System.out.println(p1 == p2); // false
  // - You want new stateful beans each time (e.g., user input processors, forms).
  // - You are building non-shared, short-lived components
 ```
-
+---
 ### Bean Life cycle:
 
 The **Spring Container** is responsible for:
@@ -353,7 +355,7 @@ public class Engine {
 	- DB connections
 	- Resource cleanup
 	- Background thread shutdown
-
+---
 ### @Qualifier and @Primary
 
 - Use `@Qualifier("beanName")` to **tell Spring exactly which bean to inject**.
@@ -383,8 +385,7 @@ public class PetrolEngine implements Engine {}
 @Component
 public class DieselEngine implements Engine {}
 ```
-
-
+---
 
 ### Conditional Bean Registration
 - Used a lot in Spring Boot autoconfig
@@ -395,6 +396,7 @@ public Engine electricEngine() {
     return new ElectricEngine();
 }
 ```
+---
 ---
 ### @Profile
 
@@ -439,12 +441,57 @@ public class SmtpMailService implements MailService {
 # Spring MVC architecture
 
 ### DispatcherServlet (Front Controller)
+- **DispatcherServlet** is the **central entry point** for every HTTP request in a Spring MVC application.
+- It receives all incoming requests and delegates them to the appropriate components (handlers, views, etc.) to process and generate a response.
+#### Request Lifecycle in Spring MVC
+```markdown
+Client → DispatcherServlet → HandlerMapping → Controller (@RestController / @Controller)
+       → HandlerAdapter → Controller Method
+       → ViewResolver (if using views) → View (e.g., Thymeleaf) → Response
+
+### **🧱 Breakdown of Each Step**
+1. **DispatcherServlet**: Receives the request.
+2. **HandlerMapping**: Finds which controller method should handle the request.
+3. **HandlerAdapter**: Calls that method.
+4. **Controller Method**: Processes logic, returns data or view name.
+5. **ViewResolver** _(if using views)_: Resolves logical view name to actual view (e.g., JSP, Thymeleaf).
+6. **View Rendering**: Fills model data into the view template.
+7. **Response**: Is sent back to the client.
+```
 
 ### HandlerMapping
 
 ### ViewResolver
+- a ViewResolver is used to **resolve the name of a view (like "home") to an actual view file** (like home.html, home.jsp, etc.).
+```java
+@Controller
+public class HomeController {
+    @GetMapping("/home")
+    public String homePage(Model model) {
+        model.addAttribute("msg", "Hello World");
+        return "home"; // <- Logical view name
+    }
+}
+// Spring uses a ViewResolver to map "home" → /templates/home.html (or /WEB-INF/views/home.jsp, etc.)
+```
+#### Common view resolvers in spring
+
+##### InternalResourceViewResolver for JSP
+- `resolver.setPrefix("/WEB-INF/views/")` -> folder
+- `resolver.setSuffix(".jsp")`
+- So "home" becomes /WEB-INF/views/home.jsp
+##### ThymeleafViewResolver
 
 ### @Controller vs @RestController
+| **Feature**             | @Controller                   | @RestController             |
+| ----------------------- | ----------------------------- | --------------------------- |
+| Returns                 | View (HTML)                   | JSON/XML                    |
+| Used in                 | Web/MVC apps                  | REST APIs                   |
+| Combines with           | View resolvers like Thymeleaf | JSON libraries like Jackson |
+| Requires @ResponseBody? | ✅ Yes (manually per method)   | ❌ No (added automatically)  |
+| Primary use case        | Web UI                        | APIs (mobile/web clients)   |
+
+- Yes, you can use both in the same project if you’re building a **hybrid app** — for example, an admin panel served with Thymeleaf (@Controller) and APIs for frontend (@RestController).
 
 ---
 # AOP (Aspect-oriented programming)
@@ -556,62 +603,94 @@ public ObjectMapper myCustomObjectMapper() {
 // Spring Boot won’t register its default one.
 ```
 
+---
+**Q: What happens when we run a Spring Boot application**
 
+- Starts the **Spring container** (via SpringApplication)
+- Does **component scanning**
+- Sets up **auto-configuration**
+	- Spring Boot sees your dependencies and auto-configures:
+	- **Web MVC** (DispatcherServlet, HandlerMapping)
+	- **Jackson** for JSON
+	- **DataSource** if DB is present
+	- **JPA/Hibernate** if spring-boot-starter-data-jpa is on classpath
+		- Configures Hibernate
+		- Sets up EntityManager
+		- Auto-creates tables (if spring.jpa.hibernate.ddl-auto=update)
+		- Can expose REST endpoints via Spring Data Repositories
+- Can expose REST endpoints via Spring Data Repositories
+- Starts an embedded **Tomcat** server (default)
+- Registers the **DispatcherServlet**
+	Once the app starts:
+	- A DispatcherServlet is registered and mapped to /
+	- It becomes the **Front Controller**
+	    - Handles **all requests**
+	    - Delegates to appropriate controller methods
+	- Your Controller becomes a REST endpoint
+		- - DispatcherServlet sees /endpoint in controller
+		- Maps to the dedicated method under mapping
+		- Returns "Hello, World!"
+		- Jackson or default handler turns it into an HTTP response
+
+|**Step**|**What Happens**|
+|---|---|
+|1|main() triggers SpringApplication.run()|
+|2|Auto-configuration & component scan|
+|3|Embedded Tomcat starts|
+|4|DispatcherServlet registered|
+|5|Your controller mapped|
+|6|Incoming request processed, response sent
 
 ---
-# Spring Boot starters
-
-
-
 ---
-# SB Actuator
-
-/actuator/health
-/actuator/metrics
-/actuator/env
-
 
 # Swagger
 
 
-# application.properties
-
-```properties
-# for postgresql
-spring.datasource.url=jdbc:postgresql://localhost:5432/spring_blog_api
-spring.datasource.username=postgres
-spring.datasource.password=root@123
-spring.datasource.driver-class-name=org.postgresql.Driver
-#
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql = true
-
-
-# for mysql
-
-# for sql
-
-# for h2
-
-```
 
 # Spring Data JPA + Hibernate + JPA
-
-
-```java
-// ResourceNotFoundException
-
-
-```
-
 ## Hibernate, ORM, JPA, Entities and Tables in Spring Data JPA
 
-- JpaRepository -> (PagingAndSortingRepository<T,ID> -> CrudRepository<T,ID> + QueryByExampleExecutor<T(no ID)>)
-- Hibernate is a powerful, high performance Object Relational Mapping(ORM) framework that provides a framework for mapping an object-oriented domain model to a relational db
-- Hibernate is one of the implementation of the `Java Persistence API(JPA)`, which is a standard specification for ORM in JAVA. Others are -> OpenJPA etc
-- JPA is specification for ORM in java. It defines a set of interfaces and annotations for mapping java objects to db tables and vice versa.
+- **JPA (Java Persistence API):**
+	- A specification (**interface**) for ORM
+	- It defines how Java objects should be mapped and persisted into RDBMS tables
+	- **Hibernate** is the most popular implementation of JPA
+	- It provides annotations like @Entity, @Id, @OneToMany, etc.
+- **Hibernate :**
+	- A JPA implementation. Actual engine that **translates** Java to SQL
+	- It is a powerful, high performance Object Relational Mapping(ORM) framework that provides a framework for mapping an object-oriented domain model to a relational db
+	- Provides the actual code behind JPA
+	- It has its own features beyond JPA (lazy loading, interceptors, etc.)
+- **Spring Data JPA**:
+	- A **Spring module** built on top of JPA and Hibernate.
+	- **Abstraction** that removes boilerplate for queries, transactions, CRUD
+	- Helps eliminate boilerplate DAO code (Data Access Object).
+	- Provides JpaRepository, CrudRepository, etc.
+	- Supports custom queries, projections, auditing, pagination, etc.
+
+- **JpaRepository** :
+	- Spring Data JPA Interface that provides full support for CRUD, pagination, sorting and JPA specific operations on entities
+	- Main entry point when using Spring Data JPA
+	- JpaRepository **is part of Spring Data JPA**. It’s not something extra — it’s the way you **use** Spring Data JPA. You extend this interface so that Spring can create implementations of it automatically.
+	```dat
+	JpaRepository<T, ID>
+   ├──extends:: PagingAndSortingRepository<T, ID>
+   │     └──extends:: CrudRepository<T, ID>
+   └──extends:: QueryByExampleExecutor<T>
+	```
+- JpaRepository extends CRUD + pagination + QBE and adds advanced JPA methods (e.g., batch operations, flush, sorting).
+
+- **Q: When would you use QueryByExampleExecutor?**
+	- When the user builds dynamic search criteria (like a search filter in UI).
+
+### Flow
+| **Layer**       | **Example**                                      | **Description**                                  |
+| --------------- | ------------------------------------------------ | ------------------------------------------------ |
+| Spring Data JPA | UserRepository extends JpaRepository<User, Long> | You define only interface – Spring creates proxy |
+| JPA             | @Entity, @OneToMany, EntityManager               | You annotate Java classes, JPA maps to SQL       |
+| Hibernate       | hibernate-core                                   | Does the real DB work behind the scenes          |
+| JDBC            | Connection, Statement                            | Hibernate finally calls JDBC to interact with DB |
+|                 |                                                  |                                                  |
 
 ```java
 
@@ -669,7 +748,7 @@ spring.sql.init.data-locations=classpath:data.sql
 
 - Builder annotation
   `Product p = Product.builder().sku("Pepsi124").title("Parse Biscuits").price(20.0).build();`
-- To handle default values in Builder -> `@Builder.Default`
+- To handle default values in Builder -> `@Builder.Default` - Lombok
 
 ---
 ```java
@@ -679,8 +758,6 @@ Optional<String> optionalValue = Optional.of("Hello, World!");
 String value = optionalValue.get();  // Output: "Hello, World!"
 
 ```
----
-
 ---
 ## Spring Data JPA interfaces and Dynamic Query methods
 
@@ -714,11 +791,292 @@ User findByEmail(@Param("email") String email);
 @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
 User findByEmailNative(@Param("email") String email);
 ```
+---
+## Caching
+
+### 1st level caching
+- Enabled by default, scoped to EntityManager
+- Fetching the same entity twice in a transaction -> one DB hit
+```java
+entityManager.find(User.class, 1L); // DB hit
+entityManager.find(User.class, 1L); // Cache hit
+```
+### 2nd level caching
+- Shared across sessions
+- Need provider support (EhCache, Redis)
+---
+## Lazy vs Eager fetching
+
+## JPA Lifecycle methods
+
 ## Sorting and Pagination in Spring Data JPA
 
+## Locking in JPA
+### Optimistic Locking (@Version)
+
+- Used in concurrent updates
+- Prevents overwriting someone else's changes
+```java
+@Entity
+public class Article {
+    @Id
+    private Long id;
+
+    @Version
+    private int version; // Managed by JPA automatically
+}
+```
+### Pessimistic Locking
+
+- Locks DB row explicitly using SELECT ... FOR UPDATE
+```java
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("select a from Article a where a.id = :id")
+Article findByIdWithLock(@Param("id") Long id)
+```
+---
 ## Spring Data JPA Mapping
 
+### One-toOne
 
+- **one-to-one association** between two entities, meaning **each row in Table A is associated with exactly one row in Table B**, and vice versa.
+```java
+//  User entity
+@Entity
+public class User {
+    @Id @GeneratedValue
+    private Long id;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "profile_id", referencedColumnName = "id") // FK in User table
+    private Profile profile;
+}
+```
+```java
+// Profile entity
+@Entity
+public class Profile {
+    @Id @GeneratedValue
+    private Long id;
+    private String bio;
+}
+```
+- `@JoinColumn` defines foreign key
+- user table has a column profile_id(foreign key to profile.id)
+- Use cascade = cascadeType.ALL when User is the owner and saves Profile
+
+#### bi-directional @OneToOne
+
+- In real-world apps. often both entities should know each other
+```java
+@Entity
+public class User {
+    @Id @GeneratedValue
+    private Long id;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "profile_id")
+    private Profile profile;
+}
+```
+```java
+@Entity
+public class Profile {
+    @Id @GeneratedValue
+    private Long id;
+
+    @OneToOne(mappedBy = "profile")
+    @JsonIgnore
+    private User user;
+}
+```
+- User is the owner side (has @JoinColumn)
+- Profile is the inverse side (has mappedBy)
+	- mappedBy tells JPA this side is **inverse** side (not owning).
+- If a user is deleted, their profile is also deleted (orphanRemoval).
+	- Putting it on Profile (inverse side) will not work — JPA ignores orphanRemoval on mappedBy side.
+- Even in bidirectional mappings, **only one side creates the actual FK column** — the side with @JoinColumn.
+- If **you don’t need navigation from Profile → User**, just use unidirectional @OneToOne.
+```java
+// Usage in code
+User user = new User();
+user.setName("John");
+
+Profile profile = new Profile();
+profile.setBio("Full stack dev");
+
+// set both sides
+user.setProfile(profile);
+profile.setUser(user);
+
+userRepository.save(user); // You only save user -> jpa cascades and persists profile -> fetch from either side
+```
+#### cascade types
+
+- Cascade types control **what happens to the child when the parent is modified**.
+- `@OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})`
+	- PERSIST : save child when saving parent
+	- REMOVE : Deletes child when parent is deleted
+	- ALL : only use when child should always be managed through parent.  when User is the owner and saves Profile
+-
+
+#### fetch types
+- `@OneToOne(fetch = FetchType.LAZY)`
+	- LAZY : Loads only when accessed (better performance)
+	- EAGER (default) : Loads immediately with parent (can cause N+1 problem)
+
+#### FK Direction
+- To inverse table
+	- `OneToOne(mappedBy = "profile")`
+
+#### @JsonIgnore
+- Mostly used in bi-directional mapping
+- When you want to ignore some sensitive data from json like password etc.
+- When you return a User from an API, Jackson tries to serialize User → Profile → User → Profile → ... infinitely.
+- Use in child entity
+- Use @JsonManagedReference in parent and @JsonBackReference in child entity
+- 'Only the User will contain Profile in JSON - not the reverse -> prevents recursion
+
+---
+### One-To-Many
+
+- One **parent entity** has many **child entities**. Each **child belongs to only one parent**.
+```java
+@Entity
+public class User {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
+}
+```
+```java
+@Entity
+public class Post {
+    @Id @GeneratedValue
+    private Long id;
+    private String content;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id") // FK goes here
+    private User user;
+}
+```
+- One User having many posts -> so list of posts
+- User table -> mapped by -> table name in parent entity (user)
+- JoinColumn in post entity
+#### cascade type
+- when you save a user -> all posts are automatically saved -> when you delete a user -> ...
+	- So ALL is fine
+#### fetch type
+- posts are loaded only when you call user.getPosts() -> LAZY useful here
+	- Use `@Transactional` -> **can happen to any mappings**
+	- When you use LAZY fetching, the associated entities (e.g., user.getPosts()) are not loaded until you access them. But by that time, the **database session may already be closed** — unless you’re inside a @Transactional method.
+	- Because Hibernate needs an **active session** (persistence context) to fetch associated entities lazily.
+	- Once the session is closed (after a non-transactional method ends), trying to access any lazy field will result exception
+		```java
+/* 🛑 Without @Transactional:
+	•	The user is fetched.
+	•	The DB session is closed immediately after findById.
+	•	Now if you do user.getPosts() (in controller or serializer):
+	•	⚠️ Boom: LazyInitializationException
+*/
+	@Transactional // Keeps the Hibernate session (persistence context) open
+	public User getUser(Long id) {
+		User user = userRepository.findById(id).orElseThrow();
+		user.getPosts().size(); // works, because session is still open
+		return user;
+	}
+
+		```
+	```json
+	{
+	  "id": 1,
+	  "name": "John",
+	  "posts": [
+	    {
+	      "id": 1,
+	      "content": "Hello World!"
+	    },
+	    {
+	      "id": 2,
+	      "content": "My 2nd Post"
+	    }
+	  ]
+	}
+```
+
+- posts are loaded immediately when User is loaded -> EAGER not recommended
+### Many-to-One
+
+### Many-to-Many
+
+- A **Student** can enroll in many **Courses**, and a **Course** can have many **Students**.
+	- 1S -> MC
+	- 1C -> MS
+	- So one to many and one to many both sides
+	- Many students can enroll in many courses
+	- Many courses can have many students
+	- 2 one-to-many relations connected via a join table
+- Both sides can have many of each other
+- In relational DBs, many-to-many is implemented using a **join table** (or linking table).
+- This join table holds foreign keys referencing the primary keys of **both** tables.
+
+```java
+@Entity
+public class Student {
+    @Id @GeneratedValue
+    private Long id;
+    private String name;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "student_course",
+        joinColumns = @JoinColumn(name = "student_id"),
+        inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private Set<Course> courses = new HashSet<>();
+}
+```
+```java
+@Entity
+public class Course {
+    @Id @GeneratedValue
+    private Long id;
+    private String title;
+
+    @ManyToMany(mappedBy = "courses")
+    private Set<Student> students = new HashSet<>();
+}
+```
+
+#### cascade type
+
+- Cascade is usually **PERSIST** and **MERGE** for many-to-many.
+	- Because you might want to save a Student and their new Courses at once.
+	- Avoid **REMOVE** here, I don't want to delete course if a certain student leaves
+
+---
+## JPA Inheritance strategies
+
+### Single Table
+- All classes in the hierarchy share one table
+-
+
+## JPA Criteria API
+
+- Used to build **type-safe dynamic queries** at runtime.
+- compile time safety and good for dynamic filters
+```java
+
+```
+
+## Auditing Entities automatically
+
+---
+---
 # DTO
 - A **DTO (Data Transfer Object)** is a design pattern used in Spring Boot applications to transfer data between layers (e.g., from the database to the service layer to the controller) while keeping domain models separate from API responses.
 - Avoid exposing internal entities: Entities often contain sensitive fields (e.g., internal IDs, audit fields) that should not be exposed to clients.
@@ -741,9 +1099,78 @@ User findByEmailNative(@Param("email") String email);
 	- Return type of ResponseEntity will be **ResponseDTO** majority.
 	- In RequestBody -> RequestDTO
 	- Call the services in controller -> Now services return type is ResponseDTO so accept in ResponseDTO object.
-
+---
+---
 # Exception Handling
 
-# Validation
+### 1. Create a unified error response DTO
+```java
+public class ApiError {
+	private int status;
+	...
+	private LocalDateTime timestamp = LocalDateTime.now();
+}
+```
+### 2. Custom Exceptions (Business/Domain)
+```java
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+### 3. Global Exception Handler
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+            HttpStatus.NOT_FOUND.value(),
+            ex.getMessage(),
+            "RESOURCE_NOT_FOUND",
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String message = ex.getBindingResult()
+                          .getFieldErrors()
+                          .stream()
+                          .map(f -> f.getField() + ": " + f.getDefaultMessage())
+                          .collect(Collectors.joining(", "));
+
+        ApiError error = new ApiError(
+            HttpStatus.BAD_REQUEST.value(),
+            message,
+            "VALIDATION_FAILED",
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "Internal server error",
+            ex.getClass().getSimpleName(),
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+```
+
+| **Purpose of Custom Exception**                                                               | **Purpose of Global Exception Handler**                 |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Acts as a signal that something specific went wrong (e.g. resource not found, conflict, etc.) | Converts that exception into a structured HTTP response |
+| Thrown explicitly in service code                                                             | Caught and formatted automatically                      |
+| Improves code readability and debugging                                                       | Centralizes error handling logic                        |
+|                                                                                               |                                                         |
+
 
 #
