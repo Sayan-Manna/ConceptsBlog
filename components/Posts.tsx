@@ -65,7 +65,11 @@ export default function Posts({ posts, limit }: Props) {
                     <p className="mt-1 line-clamp-2 text-sm font-light text-muted-foreground">{post.summary}</p>
                   </div>
 
-                  {post.publishedAt && <p className="mt-2 flex w-full justify-end text-sm font-light sm:mt-0 sm:w-auto">{formatDate(post.publishedAt)}</p>}
+                  {post.updatedAt || post.publishedAt ? (
+                    <p className="mt-2 flex w-full justify-end text-sm font-light sm:mt-0 sm:w-auto">
+                      {post.updatedAt ? `Updated ${formatDate(post.updatedAt)}` : formatDate(post.publishedAt!)}
+                    </p>
+                  ) : null}
                 </div>
               </Link>
             </li>

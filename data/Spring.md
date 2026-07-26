@@ -1,9 +1,12 @@
 ---
 title: Spring Concepts
-summary: So you want to get started with Spring Boot without much exploring the Spring Core, Spring MVC, then this is the right document for you.
-image:
-publishedAt: 2025-05-18
+summary: >-
+  So you want to get started with Spring Boot without much exploring the Spring
+  Core, Spring MVC, then this is the right document for you.
+publishedAt: 2025-05-18T00:00:00.000Z
+updatedAt: '2026-07-26'
 ---
+SPRING BOOT
 
 # IoC and DI
 

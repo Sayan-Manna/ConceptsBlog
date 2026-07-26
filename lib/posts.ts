@@ -6,6 +6,7 @@ export type PostMetadata = {
   title?: string;
   summary?: string;
   publishedAt?: string;
+  updatedAt?: string;
   image?: string;
   slug: string;
 };
@@ -30,7 +31,11 @@ export async function getPosts(rootDir: string, limit?: number): Promise<PostMet
   const posts = files
     .filter((file) => file.endsWith(".md"))
     .map((file) => getPostMetadata(rootDir, file))
-    .sort((a, b) => (new Date(b.publishedAt ?? "").getTime() || 0) - (new Date(a.publishedAt ?? "").getTime() || 0));
+    .sort((a, b) => {
+      const dateA = new Date(a.updatedAt ?? a.publishedAt ?? "").getTime() || 0;
+      const dateB = new Date(b.updatedAt ?? b.publishedAt ?? "").getTime() || 0;
+      return dateB - dateA;
+    });
   if (limit) {
     return posts.slice(0, limit);
   }

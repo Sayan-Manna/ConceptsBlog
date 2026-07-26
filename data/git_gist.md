@@ -1,6 +1,6 @@
 ---
 title: "Basic Git Workflow"
-summary: "Git is a version control system that is used to track changes in the source code. It is a distributed version control system that is used to track changes in the source code",
+summary: "Git is a version control system that is used to track changes in the source code. It is a distributed version control system that is used to track changes in the source code"
 publishedAt: "2025-02-11"
 ---
 
