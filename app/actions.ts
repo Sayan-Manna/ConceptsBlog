@@ -23,7 +23,7 @@ export async function saveNote(
   // Ensure data directory exists
   try {
     await fs.mkdir(dataDir, { recursive: true });
-  } catch (err) {}
+  } catch {}
 
   const now = new Date().toISOString().split("T")[0];
   const metadata = {
@@ -40,7 +40,7 @@ export async function saveNote(
     const oldFilePath = path.join(dataDir, `${originalSlug}.md`);
     try {
       await fs.unlink(oldFilePath);
-    } catch (err) {}
+    } catch {}
   }
 
   const newFilePath = path.join(dataDir, `${slug}.md`);
@@ -59,7 +59,7 @@ export async function deleteNote(slug: string) {
   const filePath = path.join(dataDir, `${slug}.md`);
   try {
     await fs.unlink(filePath);
-  } catch (err) {}
+  } catch {}
 
   revalidatePath("/");
   redirect("/");

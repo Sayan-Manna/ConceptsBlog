@@ -43,8 +43,8 @@ export default function NoteEditor({
       try {
         await saveNote(slug, title, summary, content, initialSlug, initialPublishedAt);
         router.push("/");
-      } catch (e: any) {
-        alert(e.message);
+      } catch (e) {
+        alert(e instanceof Error ? e.message : String(e));
       }
     });
   };
